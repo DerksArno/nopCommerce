@@ -58,6 +58,14 @@ namespace Nop.Services.Localization
         void UpdateLocaleStringResource(LocaleStringResource localeStringResource);
 
         /// <summary>
+        /// Loads the locale resources from stream by language
+        /// </summary>
+        /// <param name="xmlStreamReader">Stream reader</param>
+        /// <param name="language">Language name</param>
+        /// <returns>Locale resource</returns>
+        HashSet<(string name, string value)> LoadLocaleResourcesFromStream(TextReader xmlStreamReader, string language);
+
+        /// <summary>
         /// Gets all locale string resources by language identifier
         /// </summary>
         /// <param name="languageId">Language identifier</param>

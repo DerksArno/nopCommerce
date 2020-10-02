@@ -97,31 +97,6 @@ namespace Nop.Services.Localization
             _lsrRepository.Update(resources);
         }
 
-        protected virtual HashSet<(string name, string value)> LoadLocaleResourcesFromStream(StreamReader xmlStreamReader, string language)
-        {
-            var result = new HashSet<(string name, string value)>();
-
-            using (var xmlReader = XmlReader.Create(xmlStreamReader))
-                while (xmlReader.ReadToFollowing("Language"))
-                {
-                    if (xmlReader.NodeType != XmlNodeType.Element)
-                        continue;
-
-                    using var languageReader = xmlReader.ReadSubtree();
-                    while (languageReader.ReadToFollowing("LocaleResource"))
-                        if (xmlReader.NodeType == XmlNodeType.Element && xmlReader.GetAttribute("Name") is string name)
-                        {
-                            using var lrReader = languageReader.ReadSubtree();
-                            if (lrReader.ReadToFollowing("Value") && lrReader.NodeType == XmlNodeType.Element)
-                                result.Add((name.ToLowerInvariant(), lrReader.ReadString()));
-                        }
-
-                    break;
-                }
-
-            return result;
-        }
-
         private static Dictionary<string, KeyValuePair<int, string>> ResourceValuesToDictionary(IEnumerable<LocaleStringResource> locales)
         {
             //format: <name, <id, value>>
@@ -417,6 +392,34 @@ namespace Nop.Services.Localization
 
             //clear cache
             _staticCacheManager.RemoveByPrefix(NopEntityCacheDefaults<LocaleStringResource>.Prefix);
+        }
+
+        public virtual HashSet<(string name, string value)> LoadLocaleResourcesFromStream(TextReader xmlStreamReader, string language)
+        {
+            var result = new HashSet<(string name, string value)>();
+
+            using (var xmlReader = XmlReader.Create(xmlStreamReader))
+                while (xmlReader.ReadToFollowing("Language"))
+                {
+                    if (xmlReader.GetAttribute("Name").ToLower() != language.ToLower())
+                        break;
+
+                    if (xmlReader.NodeType != XmlNodeType.Element)
+                        continue;
+
+                    using var languageReader = xmlReader.ReadSubtree();
+                    while (languageReader.ReadToFollowing("LocaleResource"))
+                        if (xmlReader.NodeType == XmlNodeType.Element && xmlReader.GetAttribute("Name") is string name)
+                        {
+                            using var lrReader = languageReader.ReadSubtree();
+                            if (lrReader.ReadToFollowing("Value") && lrReader.NodeType == XmlNodeType.Element)
+                                result.Add((name.ToLowerInvariant(), lrReader.ReadString()));
+                        }
+
+                    break;
+                }
+
+            return result;
         }
 
         /// <summary>
